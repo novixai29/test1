@@ -50,14 +50,14 @@ async function submitRSVP(data) {
     const url = isSupabase
       ? `${RSVP_CONFIG.supabaseUrl.replace(/\/$/, '')}/rest/v1/${encodeURIComponent(RSVP_CONFIG.supabaseTable)}`
       : RSVP_CONFIG.endpoint;
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = { 'Content-Type': isSupabase ? 'application/json' : 'text/plain;charset=utf-8' };
     if (isSupabase) {
       headers.apikey = RSVP_CONFIG.supabasePublicKey;
       headers.Authorization = `Bearer ${RSVP_CONFIG.supabasePublicKey}`;
       headers.Prefer = 'return=minimal';
     }
     const response = await fetch(url, {
-      method: 'POST', headers, body: JSON.stringify(data), signal: controller.signal,
+      method: 'POST', headers, body: JSON.stringify({ action: 'register', ...data }), signal: controller.signal,
       credentials: 'omit', cache: 'no-store'
     });
     if (!response.ok) throw new Error('RSVP_FAILED');
@@ -155,6 +155,7 @@ function normalizeGuest(record) {
     : [];
   const parsedCount = Number(record.companions_count);
   return {
+    id: String(record.id || ''),
     name: String(record.guest_name || '').trim(),
     count: Number.isInteger(parsedCount) && parsedCount >= 0 ? Math.min(parsedCount, companions.length) : companions.length,
     companions,
@@ -187,7 +188,16 @@ function renderGuestDashboard(records) {
     const number = document.createElement('span');
     number.className = 'guest-number';
     number.textContent = toEnglishDigits(index + 1);
-    head.append(title, number);
+    const actions = document.createElement('div');
+    actions.className = 'guest-record-actions no-print';
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'delete-guest';
+    remove.textContent = 'حذف التسجيل';
+    remove.disabled = !guest.id;
+    remove.addEventListener('click', () => deleteGuest(guest.id, guest.name, remove));
+    actions.append(remove, number);
+    head.append(title, actions);
     const meta = document.createElement('div');
     meta.className = 'guest-meta';
     const count = document.createElement('span');
@@ -221,15 +231,23 @@ function renderGuestDashboard(records) {
 async function loadGuestDashboard() {
   const status = document.getElementById('dashboardStatus');
   status.className = 'dashboard-status';
+  const accessKey = decodeURIComponent(window.location.hash.slice(1));
   if (!RSVP_CONFIG.dashboardEndpoint) {
     status.classList.add('error');
     status.textContent = 'لم يتم ربط سجل الحضور بقاعدة البيانات بعد.';
     renderGuestDashboard([]);
     return;
   }
+  if (!accessKey) {
+    status.classList.add('error');
+    status.textContent = 'رابط العرسان غير مكتمل. افتح الرابط الإداري الخاص بكم.';
+    renderGuestDashboard([]);
+    return;
+  }
   status.textContent = 'جارٍ تحميل قائمة الحضور…';
   try {
-    const response = await fetch(RSVP_CONFIG.dashboardEndpoint, { credentials: 'omit', cache: 'no-store' });
+    const joiner = RSVP_CONFIG.dashboardEndpoint.includes('?') ? '&' : '?';
+    const response = await fetch(`${RSVP_CONFIG.dashboardEndpoint}${joiner}action=list&key=${encodeURIComponent(accessKey)}`, { credentials: 'omit', cache: 'no-store' });
     if (!response.ok) throw new Error('DASHBOARD_FAILED');
     const result = await response.json();
     const records = Array.isArray(result) ? result : result.guests;
@@ -239,6 +257,33 @@ async function loadGuestDashboard() {
   } catch (_) {
     status.classList.add('error');
     status.textContent = 'تعذّر تحميل قائمة الحضور. يرجى المحاولة مرة أخرى.';
+  }
+}
+
+async function deleteGuest(id, name, button) {
+  if (!id || !RSVP_CONFIG.dashboardEndpoint) return;
+  if (!window.confirm(`هل تريد حذف تسجيل ${name}؟`)) return;
+  const accessKey = decodeURIComponent(window.location.hash.slice(1));
+  button.disabled = true;
+  button.textContent = 'جارٍ الحذف…';
+  try {
+    const response = await fetch(RSVP_CONFIG.dashboardEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'delete', id, key: accessKey }),
+      credentials: 'omit',
+      cache: 'no-store'
+    });
+    if (!response.ok) throw new Error('DELETE_FAILED');
+    const result = await response.json();
+    if (result.success !== true) throw new Error('DELETE_FAILED');
+    await loadGuestDashboard();
+  } catch (_) {
+    const status = document.getElementById('dashboardStatus');
+    status.className = 'dashboard-status error';
+    status.textContent = 'تعذّر حذف التسجيل. يرجى المحاولة مرة أخرى.';
+    button.disabled = false;
+    button.textContent = 'حذف التسجيل';
   }
 }
 
