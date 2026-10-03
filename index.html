@@ -6,20 +6,20 @@
   <meta name="theme-color" content="#57131B">
   <title>عقد قران</title>
   <meta name="description" content="دعوة لحضور عقد قران الدكتور زين العابدين والدكتورة فاطمة">
-  <!-- قبل النشر: استبدل https://YOUR-DOMAIN.com بعنوان GitHub Pages الكامل، بما فيه اسم المستودع عند وجوده، في جميع الروابط أدناه. -->
+  <!-- رابط النشر الحالي على GitHub Pages. حدّثه هنا إذا استُخدم نطاق مخصص لاحقاً. -->
   <meta property="og:title" content="عقد قران">
   <meta property="og:description" content="دعوة لحضور عقد قران الدكتور زين العابدين والدكتورة فاطمة">
-  <meta property="og:image" content="https://YOUR-DOMAIN.com/assets/preview.jpg">
+  <meta property="og:image" content="https://novixai29.github.io/test1/assets/preview.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="عقد قران زين العابدين وفاطمة">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ar_AR">
-  <meta property="og:url" content="https://YOUR-DOMAIN.com/">
+  <meta property="og:url" content="https://novixai29.github.io/test1/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="عقد قران">
   <meta name="twitter:description" content="دعوة لحضور عقد قران الدكتور زين العابدين والدكتورة فاطمة">
-  <meta name="twitter:image" content="https://YOUR-DOMAIN.com/assets/preview.jpg">
+  <meta name="twitter:image" content="https://novixai29.github.io/test1/assets/preview.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
   <script src="script.js" defer></script>
 </head>
 <body class="is-closed">
-  <!-- جميع الرسومات داخل الواجهة SVG؛ preview.jpg مستخدمة في بيانات المشاركة فقط. -->
+  <!-- عناصر الزينة مرسومة بالكود؛ place.jpg صورة المكان، وpreview.jpg لمعاينة الرابط فقط. -->
   <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs>
       <symbol id="branch" viewBox="0 0 120 200">
@@ -69,6 +69,27 @@
     </div>
   </section>
 
+  <section id="guestDashboard" class="guest-dashboard" hidden aria-labelledby="dashboardTitle">
+    <header class="dashboard-header">
+      <svg class="dashboard-sprig" viewBox="0 0 64 64" aria-hidden="true"><use href="#sprig"/></svg>
+      <p class="eyebrow">قائمة حضور عقد القران</p>
+      <h1 id="dashboardTitle">زين العابدين <i>&amp;</i> فاطمة</h1>
+      <p>سجل الحضور الخاص بالعرسان</p>
+      <div class="dashboard-actions no-print">
+        <button id="refreshGuests" class="dashboard-button" type="button">تحديث القائمة</button>
+        <button id="printGuests" class="dashboard-button primary" type="button">طباعة القائمة</button>
+      </div>
+    </header>
+    <div class="dashboard-summary" aria-label="ملخص الحضور">
+      <article><strong id="registeredGuests">0</strong><span>المدعوون المسجلون</span></article>
+      <article><strong id="totalCompanions">0</strong><span>المرافقون</span></article>
+      <article><strong id="totalAttendees">0</strong><span>إجمالي الحضور</span></article>
+    </div>
+    <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
+    <div id="guestList" class="guest-list"></div>
+    <footer class="dashboard-footer">تم إعداد القائمة لتكون واضحة وجاهزة للطباعة</footer>
+  </section>
+
   <main id="invitation" class="invitation" inert aria-hidden="true">
     <header class="hero" aria-labelledby="couple-heading">
       <p class="eyebrow hero-reveal">بسم الله الرحمن الرحيم</p>
@@ -81,6 +102,7 @@
       </div>
       <div class="divider hero-reveal" aria-hidden="true"><span></span><svg viewBox="0 0 64 64"><use href="#sprig"/></svg><span></span></div>
       <p class="hero-note hero-reveal">وبحضوركم تكتمل فرحتنا</p>
+      <a class="attendance-hint hero-reveal" href="#rsvp"><span>يرجى التمرير إلى أسفل الصفحة لتأكيد حضوركم</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
       <a class="scroll-cue" href="#invitation-card" aria-label="انتقل إلى تفاصيل الدعوة"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
     </header>
 
@@ -93,17 +115,18 @@
       <p class="invitation-copy">ان يدعو حضراتكم الكرام<br>لمشاركتهم عقد قران</p>
       <p class="card-couple"><span><span data-event="groomTitle">الدكتور</span> <span data-event="groom">زين العابدين</span></span><i aria-hidden="true">&amp;</i><span><span class="sr-only">و</span><span data-event="brideTitle">الدكتورة</span> <span data-event="bride">فاطمة</span></span></p>
       <div class="divider" aria-hidden="true"><span></span><svg viewBox="0 0 64 64"><use href="#sprig"/></svg><span></span></div>
-      <p id="dateSentence" class="date-sentence">وذلك بمشيئه الله تعالى<br><strong>يوم الجمعة المصادف</strong><br><strong>التاسع من شهر اكتوبر التالي</strong></p>
+      <p id="dateSentence" class="date-sentence"><strong>يوم الجمعة المصادف</strong><br><strong>التاسع من شهر اكتوبر الحالي تكون مشاية الرجال في تمام الساعة الثالثة ظهرا و حفل الخطوبة الساعة الخامسة مساءا على مزرعة آرام</strong></p>
     </section>
 
     <section class="date-section reveal" aria-labelledby="date-heading">
       <p class="eyebrow" id="date-heading">موعد يجمعنا بالفرح</p>
-      <div class="date-composition"><span>عقد القران</span><h2 data-event="dayName">الجمعة</h2><span class="date-rule"></span><p>التاسع من شهر اكتوبر التالي</p></div>
+      <div class="date-composition"><span>عقد القران</span><h2 data-event="dayName">الجمعة</h2><span class="date-rule"></span><p>التاسع من شهر اكتوبر الحالي</p></div>
     </section>
 
     <section class="venue-section reveal" aria-labelledby="venue-heading">
       <p class="eyebrow">على موعد معكم</p><h2 id="venue-heading">مكان عقد القران</h2>
       <div class="venue-card">
+        <figure class="place-photo-wrap"><img class="place-photo" src="assets/place.jpg" alt="مزرعة آرام" loading="lazy" decoding="async"><figcaption>مزرعة آرام</figcaption></figure>
         <svg class="abstract-map" viewBox="0 0 400 230" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path d="M0 35h90l40 50h130l50-50h90M0 90h60l45 60h170l65 80M0 190h80l60-50V0M210 0v65l-40 55v110M280 0v75l45 40h75M0 125h70M240 230v-50h160M70 0v80M350 0v65M290 125h110"/><path d="M20 155h60l40-45h95l35-40h110" stroke="var(--gold)" stroke-width="3" stroke-dasharray="5 7"/></g><g fill="none" stroke="currentColor" opacity=".6"><rect x="20" y="48" width="38" height="26" rx="5"/><rect x="230" y="16" width="34" height="35" rx="5"/><rect x="300" y="150" width="61" height="20" rx="5"/></g></svg>
         <div class="pin-wrap"><svg viewBox="0 0 48 60" aria-hidden="true"><path d="M24 56S5 36 5 23a19 19 0 0 1 38 0c0 13-19 33-19 33Z" fill="currentColor"/><circle cx="24" cy="23" r="7" fill="var(--cream)"/></svg></div>
         <p>حضوركم يشرّفنا</p>
@@ -111,12 +134,14 @@
       </div>
     </section>
 
+    <aside class="children-note reveal" aria-label="تنبيه بخصوص الأطفال"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#sprig"/></svg><p>جنة الأطفال منازلهم</p><span>(يمنع اصطحاب الأطفال رجاءً)</span></aside>
+
     <section id="rsvp" class="rsvp-card reveal" aria-labelledby="rsvp-heading">
       <svg class="rsvp-sprig" viewBox="0 0 64 64" aria-hidden="true"><use href="#sprig"/></svg>
       <h2 id="rsvp-heading">تأكيد الحضور</h2><p class="rsvp-intro">يسعدنا تأكيد حضوركم ومشاركتكم فرحتنا</p>
       <form id="rsvpForm" novalidate>
         <div class="field"><label for="guestName">اسم الشخص المدعو</label><input id="guestName" name="guest_name" type="text" placeholder="اكتب الاسم الكامل" autocomplete="name" maxlength="150" required aria-describedby="guestName-error"><p class="field-error" id="guestName-error"></p></div>
-        <div class="field"><label for="companionsCount">عدد المرافقين</label><div class="select-wrap"><select id="companionsCount" name="companions_count" aria-controls="companionFields"><option value="0">٠</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
+        <div class="field"><label for="companionsCount">عدد المرافقين</label><div class="select-wrap"><select id="companionsCount" name="companions_count" aria-controls="companionFields"><option value="0">0</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
         <div id="companionFields" class="companion-fields"></div>
         <p id="companionAnnouncement" class="sr-only" role="status" aria-live="polite"></p>
         <p id="formMessage" class="form-message" role="status" aria-live="polite" tabindex="-1"></p>
@@ -125,11 +150,24 @@
       <div id="rsvpSuccess" class="success-state" hidden tabindex="-1" role="status"><svg class="success-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28"/><path d="m19 32 9 9 17-19"/></svg><h3>تم تأكيد حضوركم</h3><p>نسعد بمشاركتكم هذه المناسبة</p><strong id="successGuest"></strong><p id="successCount"></p></div>
     </section>
 
+    <section class="countdown-card reveal" aria-labelledby="countdownHeading">
+      <svg class="countdown-sprig" viewBox="0 0 64 64" aria-hidden="true"><use href="#sprig"/></svg>
+      <p class="eyebrow">نترقب حضوركم بكل محبة</p>
+      <h2 id="countdownHeading">الوقت المتبقي لمشاية الرجال</h2>
+      <div id="countdown" class="countdown" role="timer" aria-live="off">
+        <div><strong id="countdownDays">0</strong><span>يوم</span></div>
+        <div><strong id="countdownHours">0</strong><span>ساعة</span></div>
+        <div><strong id="countdownMinutes">0</strong><span>دقيقة</span></div>
+        <div><strong id="countdownSeconds">0</strong><span>ثانية</span></div>
+      </div>
+      <p id="countdownMessage" class="countdown-message">الجمعة 9 أكتوبر 2026 — الساعة 3:00 ظهراً</p>
+    </section>
+
     <footer class="footer reveal"><svg class="footer-architecture" viewBox="0 0 400 120" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path d="M25 115h350M80 115V40h240v75M65 40h270M105 115V75a20 20 0 0 1 40 0v40M180 115V70a20 20 0 0 1 40 0v45M255 115V75a20 20 0 0 1 40 0v40M165 40a35 35 0 0 1 70 0M200 5V0M80 45V20M320 45V20M60 115V65M340 115V65"/><path d="M90 45h220M90 50h220M90 105h15M145 105h35M220 105h35M295 105h15"/></g></svg><p><span data-event="groom">زين العابدين</span> <i>&amp;</i> <span data-event="bride">فاطمة</span></p><svg class="footer-sprig" viewBox="0 0 64 64" aria-hidden="true"><use href="#sprig"/></svg><span>دامت الأفراح في دياركم</span></footer>
   </main>
 
   <audio id="weddingMusic" src="assets/music.mp3" loop preload="auto"></audio>
-  <div class="music-control" id="musicControl" hidden><p id="musicStatus" class="music-status" role="status" aria-live="polite"></p><button id="musicToggle" class="music-button" type="button" aria-label="تشغيل الموسيقى" aria-pressed="false"><svg class="music-note" viewBox="0 0 24 24" aria-hidden="true"><use href="#note"/></svg><svg class="music-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div>
+  <div class="music-control" id="musicControl" hidden><p id="musicStatus" class="music-status" role="status" aria-live="polite"></p><button id="musicToggle" class="music-button" type="button" aria-label="تشغيل الموسيقى" aria-pressed="false"><svg class="music-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg><svg class="music-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Z"/><path d="m17 10 5 5m0-5-5 5"/></svg></button></div>
   <noscript><div class="noscript-message">يرجى تفعيل جافاسكربت لفتح الدعوة وتأكيد الحضور.</div></noscript>
 </body>
 </html>

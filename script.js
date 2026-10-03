@@ -9,9 +9,10 @@ const EVENT = {
   hostOne: 'السيد ضرغام ناصر الموسوي',
   hostTwo: 'السيد ازهر صاحب الشمري',
   invitationText: 'يتشرف السيد ضرغام ناصر الموسوي والسيد ازهر صاحب الشمري ان يدعو حضراتكم الكرام لمشاركتهم عقد قران الدكتور زين العابدين والدكتورة فاطمة',
-  dateSentence: 'وذلك بمشيئه الله تعالى يوم الجمعة المصادف التاسع من شهر اكتوبر التالي',
-  // الأسطر منفصلة للتحكم بتسلسل أحجام النص؛ حدّثها مع dateSentence عند تغيير الموعد.
-  dateLines: ['وذلك بمشيئه الله تعالى', 'يوم الجمعة المصادف', 'التاسع من شهر اكتوبر التالي'],
+  dateSentence: 'يوم الجمعة المصادف التاسع من شهر اكتوبر الحالي تكون مشاية الرجال في تمام الساعة الثالثة ظهرا و حفل الخطوبة الساعة الخامسة مساءا على مزرعة آرام',
+  // بداية المناسبة: مشاية الرجال، بتوقيت بغداد.
+  eventDateTime: '2026-10-09T15:00:00+03:00',
+  dateLines: ['يوم الجمعة المصادف', 'التاسع من شهر اكتوبر الحالي تكون مشاية الرجال في تمام الساعة الثالثة ظهرا و حفل الخطوبة الساعة الخامسة مساءا على مزرعة آرام'],
   dayName: 'الجمعة',
   mapsUrl: 'https://maps.app.goo.gl/cZ5Kbs4vbKYyXbnW6?g_st=it',
   musicFile: 'assets/music.mp3',
@@ -25,14 +26,16 @@ const EVENT = {
 // لا تضع service_role key أو كلمة مرور أو مفتاحاً سرياً هنا.
 const RSVP_CONFIG = {
   endpoint: '',
+  // رابط GET آمن يعيد { guests: [...] }. لا تضع مفتاح إدارة سرياً في هذا الملف.
+  dashboardEndpoint: '',
   supabaseUrl: '',
   supabasePublicKey: '',
   supabaseTable: 'rsvps',
   timeoutMs: 15000
 };
 
-function toArabicDigits(value) {
-  return String(value).replace(/[0-9]/g, digit => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
+function toEnglishDigits(value) {
+  return String(value).replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)));
 }
 
 /** نقطة التكامل المستقلة. لا تعتبر الإرسال ناجحاً إلا بعد حفظ الخدمة للبيانات. */
@@ -83,6 +86,7 @@ const formMessage = document.getElementById('formMessage');
 const submitButton = document.getElementById('submitButton');
 const savedCompanions = Array(20).fill('');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const isDashboardView = new URLSearchParams(window.location.search).get('view') === 'guests';
 let opened = false;
 let submitting = false;
 let musicStatusTimer;
@@ -90,7 +94,7 @@ let musicStatusTimer;
 document.body.classList.add('js-ready');
 document.querySelectorAll('[data-event]').forEach(element => {
   const value = EVENT[element.dataset.event];
-  if (typeof value === 'string') element.textContent = toArabicDigits(value);
+  if (typeof value === 'string') element.textContent = toEnglishDigits(value);
 });
 document.getElementById('mapsLink').href = EVENT.mapsUrl;
 if (music.getAttribute('src') !== EVENT.musicFile) music.src = EVENT.musicFile;
@@ -99,14 +103,14 @@ const dateSentence = document.getElementById('dateSentence');
 dateSentence.replaceChildren();
 EVENT.dateLines.forEach((line, index) => {
   if (index) dateSentence.append(document.createElement('br'));
-  const text = document.createElement(index ? 'strong' : 'span');
-  text.textContent = toArabicDigits(line);
+  const text = document.createElement('strong');
+  text.textContent = toEnglishDigits(line);
   dateSentence.append(text);
 });
-document.querySelector('.date-composition p').textContent = toArabicDigits(EVENT.dateLines[2]);
+document.querySelector('.date-composition p').textContent = 'التاسع من شهر اكتوبر الحالي';
 countSelect.replaceChildren();
 for (let count = 0; count <= 20; count++) {
-  countSelect.add(new Option(toArabicDigits(count), String(count)));
+  countSelect.add(new Option(toEnglishDigits(count), String(count)));
 }
 
 function updateMusicButton() {
@@ -137,6 +141,141 @@ musicButton.addEventListener('click', () => {
   if (music.paused) playMusic();
   else music.pause();
 });
+
+function formatGuestDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return toEnglishDigits(new Intl.DateTimeFormat('ar-IQ', { dateStyle: 'medium', timeStyle: 'short' }).format(date));
+}
+
+function normalizeGuest(record) {
+  const companions = Array.isArray(record.companions)
+    ? record.companions.map(name => String(name || '').trim()).filter(Boolean)
+    : [];
+  const parsedCount = Number(record.companions_count);
+  return {
+    name: String(record.guest_name || '').trim(),
+    count: Number.isInteger(parsedCount) && parsedCount >= 0 ? Math.min(parsedCount, companions.length) : companions.length,
+    companions,
+    createdAt: record.created_at || record.submitted_at || ''
+  };
+}
+
+function renderGuestDashboard(records) {
+  const guests = records.map(normalizeGuest).filter(guest => guest.name);
+  const companionsTotal = guests.reduce((sum, guest) => sum + guest.count, 0);
+  document.getElementById('registeredGuests').textContent = toEnglishDigits(guests.length);
+  document.getElementById('totalCompanions').textContent = toEnglishDigits(companionsTotal);
+  document.getElementById('totalAttendees').textContent = toEnglishDigits(guests.length + companionsTotal);
+  const list = document.getElementById('guestList');
+  list.replaceChildren();
+  if (!guests.length) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-guests';
+    empty.textContent = 'لا توجد تسجيلات حضور حتى الآن.';
+    list.append(empty);
+    return;
+  }
+  guests.forEach((guest, index) => {
+    const article = document.createElement('article');
+    article.className = 'guest-record';
+    const head = document.createElement('div');
+    head.className = 'guest-record-head';
+    const title = document.createElement('h2');
+    title.textContent = guest.name;
+    const number = document.createElement('span');
+    number.className = 'guest-number';
+    number.textContent = toEnglishDigits(index + 1);
+    head.append(title, number);
+    const meta = document.createElement('div');
+    meta.className = 'guest-meta';
+    const count = document.createElement('span');
+    count.textContent = `عدد المرافقين: ${toEnglishDigits(guest.count)}`;
+    meta.append(count);
+    const date = formatGuestDate(guest.createdAt);
+    if (date) {
+      const registered = document.createElement('span');
+      registered.textContent = `وقت التسجيل: ${date}`;
+      meta.append(registered);
+    }
+    article.append(head, meta);
+    if (guest.count) {
+      const companionBox = document.createElement('div');
+      companionBox.className = 'guest-companions';
+      const heading = document.createElement('strong');
+      heading.textContent = 'أسماء المرافقين';
+      const names = document.createElement('ol');
+      guest.companions.slice(0, guest.count).forEach(name => {
+        const item = document.createElement('li');
+        item.textContent = name;
+        names.append(item);
+      });
+      companionBox.append(heading, names);
+      article.append(companionBox);
+    }
+    list.append(article);
+  });
+}
+
+async function loadGuestDashboard() {
+  const status = document.getElementById('dashboardStatus');
+  status.className = 'dashboard-status';
+  if (!RSVP_CONFIG.dashboardEndpoint) {
+    status.classList.add('error');
+    status.textContent = 'لم يتم ربط سجل الحضور بقاعدة البيانات بعد.';
+    renderGuestDashboard([]);
+    return;
+  }
+  status.textContent = 'جارٍ تحميل قائمة الحضور…';
+  try {
+    const response = await fetch(RSVP_CONFIG.dashboardEndpoint, { credentials: 'omit', cache: 'no-store' });
+    if (!response.ok) throw new Error('DASHBOARD_FAILED');
+    const result = await response.json();
+    const records = Array.isArray(result) ? result : result.guests;
+    if (!Array.isArray(records)) throw new Error('DASHBOARD_FAILED');
+    renderGuestDashboard(records);
+    status.textContent = `آخر تحديث: ${formatGuestDate(new Date().toISOString())}`;
+  } catch (_) {
+    status.classList.add('error');
+    status.textContent = 'تعذّر تحميل قائمة الحضور. يرجى المحاولة مرة أخرى.';
+  }
+}
+
+if (isDashboardView) {
+  document.body.classList.remove('is-closed');
+  document.body.classList.add('guest-dashboard-mode');
+  opening.hidden = true;
+  invitation.hidden = true;
+  musicControl.hidden = true;
+  const dashboard = document.getElementById('guestDashboard');
+  dashboard.hidden = false;
+  document.getElementById('refreshGuests').addEventListener('click', loadGuestDashboard);
+  document.getElementById('printGuests').addEventListener('click', () => window.print());
+  loadGuestDashboard();
+}
+
+function updateCountdown() {
+  const target = new Date(EVENT.eventDateTime).getTime();
+  const remaining = Math.max(0, target - Date.now());
+  const days = Math.floor(remaining / 86400000);
+  const hours = Math.floor((remaining % 86400000) / 3600000);
+  const minutes = Math.floor((remaining % 3600000) / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+  document.getElementById('countdownDays').textContent = String(days);
+  document.getElementById('countdownHours').textContent = String(hours).padStart(2, '0');
+  document.getElementById('countdownMinutes').textContent = String(minutes).padStart(2, '0');
+  document.getElementById('countdownSeconds').textContent = String(seconds).padStart(2, '0');
+  document.getElementById('countdown').setAttribute('aria-label', `${days} يوم و${hours} ساعة و${minutes} دقيقة و${seconds} ثانية`);
+  if (remaining === 0) {
+    document.getElementById('countdownMessage').textContent = 'حلّ موعد المناسبة — أهلاً وسهلاً بكم';
+  }
+}
+
+if (!isDashboardView) {
+  updateCountdown();
+  window.setInterval(updateCountdown, 1000);
+}
 
 let revealObserver;
 if ('IntersectionObserver' in window && !reducedMotion.matches) {
@@ -188,7 +327,7 @@ function renderCompanionFields() {
     field.className = 'field companion-field';
     const label = document.createElement('label');
     label.htmlFor = `companion-${index}`;
-    label.textContent = `اسم المرافق ${toArabicDigits(index + 1)}`;
+    label.textContent = `اسم المرافق ${toEnglishDigits(index + 1)}`;
     const input = document.createElement('input');
     input.id = label.htmlFor;
     input.name = `companion_${index}`;
@@ -211,18 +350,18 @@ function renderCompanionFields() {
     companionContainer.append(field);
   }
   document.getElementById('companionAnnouncement').textContent = count
-    ? `عدد حقول أسماء المرافقين: ${toArabicDigits(count)}` : 'بدون مرافقين';
+    ? `عدد حقول أسماء المرافقين: ${toEnglishDigits(count)}` : 'بدون مرافقين';
   formMessage.textContent = '';
 }
 countSelect.addEventListener('change', renderCompanionFields);
 
-// تحويل الأرقام المكتوبة أيضاً، حتى لا تظهر أرقام لاتينية في الحقول أو رسالة النجاح.
+// توحيد الأرقام المكتوبة لتظهر بالصيغة الإنجليزية في جميع الحقول والرسائل.
 form.addEventListener('input', event => {
   if (!(event.target instanceof HTMLInputElement)) return;
   const input = event.target;
   const start = input.selectionStart;
   const end = input.selectionEnd;
-  const converted = toArabicDigits(input.value).replace(/[۰-۹]/g, digit => '٠١٢٣٤٥٦٧٨٩'['۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)]);
+  const converted = toEnglishDigits(input.value);
   if (input.value !== converted) {
     input.value = converted;
     input.setSelectionRange(start, end);
@@ -245,7 +384,7 @@ function validateForm() {
       input.setAttribute('aria-invalid', 'true');
       document.getElementById(`${input.id}-error`).textContent = input === guestInput
         ? 'يرجى كتابة اسم الشخص المدعو.'
-        : `يرجى كتابة اسم المرافق ${toArabicDigits(Number(input.dataset.index) + 1)}.`;
+        : `يرجى كتابة اسم المرافق ${toEnglishDigits(Number(input.dataset.index) + 1)}.`;
       if (!firstInvalid) firstInvalid = input;
     }
   });
@@ -276,8 +415,8 @@ form.addEventListener('submit', async event => {
   formMessage.textContent = '';
   try {
     await submitRSVP(data);
-    document.getElementById('successGuest').textContent = toArabicDigits(data.guest_name);
-    document.getElementById('successCount').textContent = `عدد المرافقين: ${toArabicDigits(count)}`;
+    document.getElementById('successGuest').textContent = toEnglishDigits(data.guest_name);
+    document.getElementById('successCount').textContent = `عدد المرافقين: ${toEnglishDigits(count)}`;
     form.hidden = true;
     const success = document.getElementById('rsvpSuccess');
     success.hidden = false;
