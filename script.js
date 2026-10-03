@@ -25,9 +25,9 @@ const EVENT = {
 // فعّل RLS وسياسة INSERT المناسبة، وقيود event_id/count/JSON، ومكافحة الرسائل المزعجة في الخدمة.
 // لا تضع service_role key أو كلمة مرور أو مفتاحاً سرياً هنا.
 const RSVP_CONFIG = {
-  endpoint: '',
+  endpoint: 'https://script.google.com/macros/s/AKfycbzI0SSeI6XhA1kHg1LEW3NEoDtDS8IW1SePLcJiPzlo7V7K0ulk85hTY6s_GjsYuZxLfw/exec',
   // رابط GET آمن يعيد { guests: [...] }. لا تضع مفتاح إدارة سرياً في هذا الملف.
-  dashboardEndpoint: '',
+  dashboardEndpoint: 'https://script.google.com/macros/s/AKfycbzI0SSeI6XhA1kHg1LEW3NEoDtDS8IW1SePLcJiPzlo7V7K0ulk85hTY6s_GjsYuZxLfw/exec',
   supabaseUrl: '',
   supabasePublicKey: '',
   supabaseTable: 'rsvps',
